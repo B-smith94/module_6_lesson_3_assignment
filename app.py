@@ -80,7 +80,7 @@ def update_member(id):
     member.name = member_data['name']
     member.age = member_data['age']
     db.session.commit()
-    return jsonify({"message": "Member details updated successfully"}), 200
+    return jsonify({"message": "Customer details updated successfully"}), 200
 
 @app.route('/members/<int:id>', methods=['DELETE'])
 def delete_member(id):
@@ -97,6 +97,7 @@ def get_all_workouts():
 
 @app.route("/workoutsessions/<int:member_id>", methods=['GET'])
 def get_member_workouts(member_id):
+    Member.query.get_or_404(member_id)
     workouts = WorkoutSession.query.filter_by(member_id=member_id)
     return workouts_schema.jsonify(workouts)
 
