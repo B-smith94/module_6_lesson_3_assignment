@@ -36,6 +36,8 @@ class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable = False)
     age = db.Column(db.Integer)
+    #Task 3, part 1
+    sessions = db.relationship("WorkoutSession", backref = 'member')
 
 class WorkoutSession(db.Model):
     __tablename__ = "WorkoutSessions"
@@ -52,10 +54,8 @@ def home():
 #Task 2
 @app.route("/members", methods=['GET'])
 def get_members():
-    try:
-        member_data = members_schema.load(request.json)
-    except ValidationError as err:
-        return jsonify(err.messages), 400
+    members = Member.query.all()
+    return members_schema.jsonify(members)
     
 @app.route('/members', methods=['POST'])
 def add_member():
@@ -90,8 +90,36 @@ def delete_member(id):
     return jsonify({"message": "Member removed sucessfully"}), 200
 
 #Task 3, part 2
+@app.route("/workoutsessions", methods=['GET'])
+def get_workouts():
+    workouts = WorkoutSession.query.all()
+    return workouts_schema.jsonify(workouts)
 
+@app.route("/workoutsessions", methods=['POST'])
+def add_workout():
+    try:
+        workout_data = workout_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400    
 
+    new_workout = WorkoutSession(member_id=workout_data['member_id'], session_date=workout_data['session_date'], session_time=workout_data['session_time'])
+    db.session.add(new_workout)
+    db.session.commit()
+    return jsonify({"message": "New member added successfully"}), 201
+
+@app.route("/workoutsessions/<int:session_id>", methods=['PUT'])
+def update_workout():
+    workout = WorkoutSession.query.get_or_404
+    try:
+        workout_data = workout_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+    
+    workout.member_id = workout_data['member_id']
+    workout.session_date = workout_data['session_date']
+    workout.session_time = workout_data['session_time']
+    workout.activity = workout_data['activity']
+    return jsonify({"message": "Customer details updated successfully"}), 200
 
 with app.app_context():
     db.create_all()
