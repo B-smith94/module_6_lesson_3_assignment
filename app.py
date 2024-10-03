@@ -1,0 +1,100 @@
+#Task 1
+from flask import Flask, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
+from marshmallow import fields, ValidationError
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:Umbr3lla4850@localhost/fitness_center_db'
+db = SQLAlchemy(app)
+ma = Marshmallow(app)
+
+class MemberSchema(ma.Schema):
+    name = fields.String(required = True)
+    age = fields.String(required = True)
+    id = fields.Integer()
+    class meta:
+        fields = ("name", "age", "id")
+
+member_schema = MemberSchema()
+members_schema = MemberSchema(many=True) 
+
+class WorkoutSchema(ma.Schema):
+    session_id = fields.Integer()
+    member_id = fields.Integer(required = True)
+    session_date = fields.String(required = True)
+    session_time = fields.String()
+    activity = fields.String()
+    class meta:
+        fields = ("session_id", "member_id", "session_date", "session_time", "activity")
+
+workout_schema = WorkoutSchema()
+workouts_schema = WorkoutSchema(many=True) 
+
+class Member(db.Model):
+    __tablename__ = "Members"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable = False)
+    age = db.Column(db.Integer)
+
+class WorkoutSession(db.Model):
+    __tablename__ = "WorkoutSessions"
+    session_id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, db.ForeignKey("Members.id"))
+    session_date = db.Column(db.Date, nullable=False)
+    session_time = db.Column(db.String(50), nullable=False)
+    activity = db.Column(db.String(255))
+
+@app.route("/")
+def home():
+    return "Welcome to the Fitness Center!"
+
+#Task 2
+@app.route("/members", methods=['GET'])
+def get_members():
+    try:
+        member_data = members_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+    
+@app.route('/members', methods=['POST'])
+def add_member():
+    try:
+        member_data = member_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+    
+    new_member = Member(name=member_data["name"], age=member_data["age"])
+    db.session.add(new_member)
+    db.session.commit()
+    return jsonify({"message": "New member added successfully"}), 201
+
+@app.route('/members/<int:id>', methods=['PUT'])
+def update_member(id):
+    member = Member.query.get_or_404(id)
+    try:
+        member_data = member_schema.load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+    
+    member.name = member_data['name']
+    member.age = member_data['age']
+    db.session.commit()
+    return jsonify({"message": "Member details updated successfully"}), 200
+
+@app.route('/members/<int:id>', methods=['DELETE'])
+def delete_member(id):
+    member = Member.query.get_or_404
+    db.session.delete(member)
+    db.session.commit()
+    return jsonify({"message": "Member removed sucessfully"}), 200
+
+#Task 3, part 2
+
+
+
+with app.app_context():
+    db.create_all()
+
+if __name__ == "__main__":
+    app.run(debut=True)
