@@ -84,15 +84,20 @@ def update_member(id):
 
 @app.route('/members/<int:id>', methods=['DELETE'])
 def delete_member(id):
-    member = Member.query.get_or_404
+    member = Member.query.get_or_404(id)
     db.session.delete(member)
     db.session.commit()
     return jsonify({"message": "Member removed sucessfully"}), 200
 
 #Task 3, part 2
 @app.route("/workoutsessions", methods=['GET'])
-def get_workouts():
+def get_all_workouts():
     workouts = WorkoutSession.query.all()
+    return workouts_schema.jsonify(workouts)
+
+@app.route("/workoutsessions/<int:member_id>", methods=['GET'])
+def get_member_workouts(member_id):
+    workouts = WorkoutSession.query.filter_by(member_id=member_id)
     return workouts_schema.jsonify(workouts)
 
 @app.route("/workoutsessions", methods=['POST'])
@@ -105,11 +110,11 @@ def add_workout():
     new_workout = WorkoutSession(member_id=workout_data['member_id'], session_date=workout_data['session_date'], session_time=workout_data['session_time'])
     db.session.add(new_workout)
     db.session.commit()
-    return jsonify({"message": "New member added successfully"}), 201
+    return jsonify({"message": "New workout added successfully"}), 201
 
 @app.route("/workoutsessions/<int:session_id>", methods=['PUT'])
-def update_workout():
-    workout = WorkoutSession.query.get_or_404
+def update_workout(session_id):
+    workout = WorkoutSession.query.get_or_404(session_id)
     try:
         workout_data = workout_schema.load(request.json)
     except ValidationError as err:
@@ -119,6 +124,7 @@ def update_workout():
     workout.session_date = workout_data['session_date']
     workout.session_time = workout_data['session_time']
     workout.activity = workout_data['activity']
+    db.session.commit()
     return jsonify({"message": "Customer details updated successfully"}), 200
 
 with app.app_context():
