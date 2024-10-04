@@ -5,7 +5,7 @@ from flask_marshmallow import Marshmallow
 from marshmallow import fields, ValidationError
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:Umbr3lla4850@localhost/fitness_center_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:{your_password}@localhost/fitness_center_db'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
